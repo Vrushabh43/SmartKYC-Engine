@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Online Video KYC Reimagined by Team Heisenberg for Standard Chartered Hackathon 🦅
 
 
@@ -114,3 +115,6 @@ Our Video KYC Automation Platform aims to revolutionize the KYC process, making 
 
 So, feel free to fork this repo. If you do, please just give us proper credit
 
+=======
+# SmartKYC-Engine
+>>>>>>> 9e33da33f38891beaa9e65a1254f68a9394d63d6
