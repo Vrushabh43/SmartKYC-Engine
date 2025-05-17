@@ -13,18 +13,25 @@ def decode_qr_opencv(image_path):
         return None
 
 def check_uid_last_4_digits(qr_data, ocr_uid):
-    root = ET.fromstring(qr_data)
-    qr_uid = root.get('uid', '')
-    is_match = qr_uid[-4:] == ocr_uid[-4:]
-    if is_match:
-        # print(f"Success: The last 4 digits of the UID from the QR code ({qr_uid[-4:]}) match the OCR UID ({ocr_uid[-4:]}).")
-        return True
-    else:
-        # print(f"Error: The last 4 digits of the UID from the QR code ({qr_uid[-4:]}) do not match the OCR UID ({ocr_uid[-4:]}).")
+    if qr_data is None:
+        return False
+    try:
+        root = ET.fromstring(qr_data)
+        qr_uid = root.get('uid', '')
+        is_match = qr_uid[-4:] == ocr_uid[-4:]
+        if is_match:
+            # print(f"Success: The last 4 digits of the UID from the QR code ({qr_uid[-4:]}) match the OCR UID ({ocr_uid[-4:]}).")
+            return True
+        else:
+            # print(f"Error: The last 4 digits of the UID from the QR code ({qr_uid[-4:]}) do not match the OCR UID ({ocr_uid[-4:]}).")
+            return False
+    except Exception as e:
+        print(f"Error processing QR data: {str(e)}")
         return False
 
-# Example usage
-image_path = 'scripts/aadhar_image/aadhar.png'
-ocr_uid = 'XXXXXXXX7743'  # Replace with your actual UID
-qr_data= decode_qr_opencv(image_path)
-check_uid_last_4_digits(qr_data, ocr_uid)
+if __name__ == '__main__':
+    # Example usage
+    image_path = 'scripts/aadhar_image/aadhar.png'
+    ocr_uid = 'XXXXXXXX7743'  # Replace with your actual UID
+    qr_data = decode_qr_opencv(image_path)
+    check_uid_last_4_digits(qr_data, ocr_uid)

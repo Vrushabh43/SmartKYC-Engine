@@ -14,6 +14,7 @@ from pan_ocr import ExtractDetails
 from face_extraction_export import extract_adhaar_face
 from face_matching_export import extract_and_store_embedding, compare_faces
 from qr_uid_matching_export import decode_qr_opencv, check_uid_last_4_digits
+from aadhar_ocr import extract_aadhaar_details
 
 app = Flask(__name__)
 CORS(app)
@@ -37,24 +38,52 @@ def aadhar_upload():
     file = request.files['file']
 
     if file.filename != '':  # Check if filename is not empty
-        file_path = os.path.join(ADHAAR_IMAGE, file.filename)
-        file.save(file_path)
+        try:
+            file_path = os.path.join(ADHAAR_IMAGE, file.filename)
+            file.save(file_path)
 
-        qr_data = decode_qr_opencv(file_path)
-        check_face_extraction = extract_adhaar_face(file_path, EXTRACTED_FACE_IMAGE)
-        check_uid = check_uid_last_4_digits(qr_data, 'XXXXXXXX7743')  # Replace with your actual UID
+            # Extract data using QR code
+            qr_data = decode_qr_opencv(file_path)
+            print("QR Data:", qr_data)
+            
+            # Extract face from Aadhaar
+            check_face_extraction = extract_adhaar_face(file_path, EXTRACTED_FACE_IMAGE)
+            print("Face extraction:", check_face_extraction)
+            
+            # Extract text data using OCR
+            ocr_data = extract_aadhaar_details(file_path)
+            print("OCR Data:", ocr_data)
+            
+            # Verify UID if QR code was detected
+            check_uid = False
+            if qr_data and ocr_data and ocr_data.get('uid'):
+                check_uid = check_uid_last_4_digits(qr_data, ocr_data['uid'])
+                print("UID Match:", check_uid)
 
-
-        if qr_data:
-            return jsonify({
-                'message': 'Aadhar uploaded and stored successfully and data extracted successfully',
-                'qr_data': qr_data,
+            response_data = {
+                'message': 'Aadhaar uploaded and processed successfully',
                 'face_extraction': check_face_extraction,
-                'uid_match': check_uid
-            })
-        else:
+                'uid_match': check_uid,
+                'qr_detected': qr_data is not None,
+                'ocr_success': ocr_data is not None
+            }
+
+            # Add OCR data if available
+            if ocr_data:
+                response_data['aadhaar_details'] = ocr_data
+            else:
+                response_data['message'] = 'Aadhaar uploaded but OCR extraction failed'
+
+            # Add QR data for debugging
+            if qr_data:
+                response_data['qr_data'] = qr_data
+
+            return jsonify(response_data)
+        except Exception as e:
+            print(f"Error processing Aadhaar: {str(e)}")
             return jsonify({
-                'message': 'Aadhar uploaded and stored. No QR code detected.'
+                'error': 'Error processing Aadhaar card',
+                'details': str(e)
             })
     else:
         return jsonify({'error': 'File not stored'})
