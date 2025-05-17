@@ -53,7 +53,7 @@ export default function OtpVerify() {
 
   const sendOtp = async (device: string) => {
     try {
-      const response = await fetch("http://localhost:5001/api/auth/send-otp", {
+      const response = await fetch("http://localhost:8000/api/auth/send-otp", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -79,14 +79,14 @@ export default function OtpVerify() {
   const onEmailSubmit = async (values: z.infer<typeof emailformSchema>) => {
     try {
       const response = await fetch(
-        `http://localhost:5001/api/auth/verify-email`,
+        `http://localhost:8000/api/auth/verify-email`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(values),
-        },
+        }
       );
 
       if (!response.ok) {
@@ -104,14 +104,14 @@ export default function OtpVerify() {
   const onPhoneSubmit = async (values: z.infer<typeof phoneformSchema>) => {
     try {
       const response = await fetch(
-        "http://localhost:5001/api/auth/verify-phone",
+        "http://localhost:8000/api/auth/verify-phone",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(values),
-        },
+        }
       );
 
       if (!response.ok) {

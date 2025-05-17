@@ -4,6 +4,9 @@ import { sendPhone } from '../../shared/sendPhone';
 import { ForgotPassword, Signup, VerifyEmail, VerifyPhone } from './auth.schema';
 import bcrypt from 'bcrypt';
 
+const isDevelopment = process.env.NODE_ENV === 'development';
+const STATIC_OTP = '111111';
+
 export const handleSignUp = async (data: Signup) => {
   const userCollection = await (await database()).collection('user');
   const user = await userCollection.findOne({ email: data.email });
@@ -13,8 +16,8 @@ export const handleSignUp = async (data: Signup) => {
   const saltRounds = 10;
   const hash = await bcrypt.hash(data.password, saltRounds);
 
-  const phoneOtp = Math.floor(100000 + Math.random() * 900000) + '';
-  const emailOtp = Math.floor(100000 + Math.random() * 900000) + '';
+  const phoneOtp = isDevelopment ? STATIC_OTP : Math.floor(100000 + Math.random() * 900000) + '';
+  const emailOtp = isDevelopment ? STATIC_OTP : Math.floor(100000 + Math.random() * 900000) + '';
   const otpCollection = await (await database()).collection('otp');
   await otpCollection.insertOne({ device: data.phone, otp: phoneOtp, createdAt: new Date() });
   await otpCollection.insertOne({ device: data.email, otp: emailOtp, createdAt: new Date() });
@@ -25,13 +28,19 @@ export const handleSignUp = async (data: Signup) => {
     email: data.email,
     phone: data.phone,
     password: hash,
-    isPhoneVerified: false,
-    isEmailVerified: false,
+    isPhoneVerified: isDevelopment, // Auto-verify in development
+    isEmailVerified: isDevelopment, // Auto-verify in development
     dob: data.dob,
   });
 };
 
 export const handleVerifyPhone = async (data: VerifyPhone) => {
+  if (isDevelopment && data.otp === STATIC_OTP) {
+    const userCollection = await (await database()).collection('user');
+    await userCollection.findOneAndUpdate({ phone: data.phone }, { $set: { isPhoneVerified: true } });
+    return;
+  }
+
   const otpCollection = await (await database()).collection('otp');
   const otp = await otpCollection.findOne({ device: data.phone }, { sort: { createdAt: -1 } });
   if (!otp || otp.otp !== data.otp) {
@@ -46,6 +55,12 @@ export const handleVerifyPhone = async (data: VerifyPhone) => {
 };
 
 export const handleVerifyEmail = async (data: VerifyEmail) => {
+  if (isDevelopment && data.otp === STATIC_OTP) {
+    const userCollection = await (await database()).collection('user');
+    await userCollection.findOneAndUpdate({ email: data.email }, { $set: { isEmailVerified: true } });
+    return;
+  }
+
   const otpCollection = await (await database()).collection('otp');
   const otp = await otpCollection.findOne({ device: data.email }, { sort: { createdAt: -1 } });
   if (!otp || otp.otp !== data.otp) {

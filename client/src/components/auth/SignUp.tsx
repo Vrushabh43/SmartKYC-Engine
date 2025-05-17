@@ -21,11 +21,9 @@ const formSchema = z.object({
   phone: z
     .string()
     .length(13, { message: "Phone number must be 13 characters." }),
-  dob: z
-    .string()
-    .regex(/^\d{2}-\d{2}-\d{4}$/, {
-      message: "Invalid date format. Please use DD-MM-YYYY.",
-    }),
+  dob: z.string().regex(/^\d{2}-\d{2}-\d{4}$/, {
+    message: "Invalid date format. Please use DD-MM-YYYY.",
+  }),
 });
 
 export default function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
@@ -41,7 +39,7 @@ export default function SignUpForm({ onSuccess }: { onSuccess: () => void }) {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      const response = await fetch("http://localhost:5001/api/auth/signup", {
+      const response = await fetch("http://localhost:8000/api/auth/signup", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
