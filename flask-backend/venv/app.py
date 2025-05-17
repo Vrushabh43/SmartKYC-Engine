@@ -95,15 +95,36 @@ def pan_upload():
         return jsonify({'error': 'No file part'})
     file = request.files['file']
     if file.filename != '':  # Check if filename is not empty
-        file_path = os.path.join(PANCARD_IMAGE, file.filename)
-        file.save(file_path)
-        data = ExtractDetails(file_path)
-
-        return jsonify({
-            'message': 'Pan Card uploaded and stored successfully', 
-            'pan_number': data[0], 
-            'dob': data[1]
-        })
+        try:
+            file_path = os.path.join(PANCARD_IMAGE, file.filename)
+            file.save(file_path)
+            
+            # Extract PAN card details
+            extracted_data = ExtractDetails(file_path)
+            
+            if extracted_data:
+                response_data = {
+                    'message': 'PAN Card uploaded and processed successfully',
+                    'pan_details': extracted_data
+                }
+            else:
+                response_data = {
+                    'message': 'PAN Card uploaded but data extraction failed',
+                    'pan_details': {
+                        'pan_number': '',
+                        'name': '',
+                        'father_name': '',
+                        'dob': ''
+                    }
+                }
+            
+            return jsonify(response_data)
+        except Exception as e:
+            print(f"Error processing PAN card: {str(e)}")
+            return jsonify({
+                'error': 'Error processing PAN card',
+                'details': str(e)
+            })
     else:
         return jsonify({'error': 'Invalid file'})
 
